@@ -32,7 +32,11 @@ class Program
     string address = iniFile.Read("address", "Connection");
     string port = iniFile.Read("port", "Connection");
 
-    if (args.Length == 0) return;
+    if (args.Length == 0)
+    {
+      help();
+      return;
+    }
 
     if (guidRegex.IsMatch(args[0]))
     {
@@ -61,7 +65,7 @@ class Program
       return;
     }
 
-    if (args[0] == "-g" || args[0] == "--generate")
+    if (args[0] == "-c" || args[0] == "--create")
     {
 
       bool enabledOnly = false;
@@ -72,8 +76,8 @@ class Program
         if (args[i] == "-e" || args[i] == "--enabled-only")
           enabledOnly = true;
 
-        bool containsCategory = args[i].Contains("--category=");
-        bool containsCategoryAlt = args[i].Contains("-c=");
+        bool containsCategory = args[i].Contains("--group=");
+        bool containsCategoryAlt = args[i].Contains("-g=");
 
         if (containsCategory || containsCategoryAlt)
           category = args[i].Replace("--category=", "").Replace("-c=", "").Replace("\"", "");
@@ -83,6 +87,7 @@ class Program
       return;
     }
 
+    help();
   }
 
   private static async Task generateAction(string address, string port, bool enabledOnly, string category = "")
@@ -115,26 +120,6 @@ class Program
         File.WriteAllText($"Output\\{action.group}\\bat\\{fileName}.bat", command);
       }
     }
-    catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
-    {
-      // Tangani kesalahan 404 Tidak Ditemukan
-      Console.WriteLine("Sumber daya yang diminta tidak ditemukan.");
-    }
-    catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.ServiceUnavailable)
-    {
-      // Tangani kesalahan 503 Layanan Tidak Tersedia
-      Console.WriteLine("Server sedang tidak tersedia.");
-    }
-    catch (TaskCanceledException )
-    {
-      // Tangani pembatalan tugas atau waktu habis
-      Console.WriteLine("Permintaan dibatalkan atau habis waktu.");
-    }
-    catch (JsonException )
-    {
-      // Tangani kesalahan saat membaca konten JSON
-      Console.WriteLine("Konten respons tidak valid sebagai JSON.");
-    }
     catch (Exception ex)
     {
       // Tangani pengecualian lainnya
@@ -152,11 +137,29 @@ class Program
 
     JsonContent action = actionId != "" ? actionById : actionByName;
 
-    // Send a POST request to the specified URI and get the response
-    HttpResponseMessage response = await client.PostAsync($"http://{address}:{port}/DoAction", action);
+    try
+    {
+      // Send a POST request to the specified URI and get the response
+      HttpResponseMessage response = await client.PostAsync($"http://{address}:{port}/DoAction", action);
 
-    // Read the response content as a string
-    string responseString = await response.Content.ReadAsStringAsync();
-    Console.WriteLine($"Content {responseString}");
+      // Read the response content as a string
+      string responseString = await response.Content.ReadAsStringAsync();
+      Console.WriteLine("Execution Success!");
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"Terjadi kesalahan: {ex.Message}");
+    }
+  }
+
+  private static void help()
+  {
+    Console.WriteLine();
+    Console.WriteLine("-c / --create      Generate any action in streamer.bot");
+    Console.WriteLine("-c -g=\"group\" / --create --group=\"group\"      Generate action only selected group");
+    Console.WriteLine("-c -e / --create --enabled-only      Generate action only enabled true");
+    Console.WriteLine("-c -e -g=\"group\" / --create --enabled-only --group=\"group\"      Generate action only selected group and enabled only");
+    Console.WriteLine();
+    Console.WriteLine("-n=\"action name\" / -name=\"action name\"     Executing action in streamer.bot by name instead id");
   }
 }
