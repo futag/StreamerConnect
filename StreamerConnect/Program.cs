@@ -69,28 +69,28 @@ class Program
     {
 
       bool enabledOnly = false;
-      string category = "";
+      string group = "";
 
       for (int i = 0; i < args.Length; i++)
       {
         if (args[i] == "-e" || args[i] == "--enabled-only")
           enabledOnly = true;
 
-        bool containsCategory = args[i].Contains("--group=");
-        bool containsCategoryAlt = args[i].Contains("-g=");
+        bool containsGroup = args[i].Contains("--group=");
+        bool containsGroupAlt = args[i].Contains("-g=");
 
-        if (containsCategory || containsCategoryAlt)
-          category = args[i].Replace("--category=", "").Replace("-c=", "").Replace("\"", "");
+        if (containsGroup || containsGroupAlt)
+          group = args[i].Replace("--group=", "").Replace("-g=", "").Replace("\"", "");
       }
 
-      await generateAction(address, port, enabledOnly, category);
+      await generateAction(address, port, enabledOnly, group);
       return;
     }
 
     help();
   }
 
-  private static async Task generateAction(string address, string port, bool enabledOnly, string category = "")
+  private static async Task generateAction(string address, string port, bool enabledOnly, string group = "")
   {
     HttpClient client = new HttpClient();
     TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
@@ -103,21 +103,23 @@ class Program
 
       foreach (var action in actions)
       {
-        if (category != "" && category.ToLower() != action?.group?.ToLower()) continue;
+        if (group != "" && group.ToLower() != action?.group?.ToLower()) continue;
         if (enabledOnly && action.enabled == false) continue;
 
-        if (!Directory.Exists($"Output\\{action.group}")) Directory.CreateDirectory($"Output\\{action.group}");
+        string outputFolder = action.group != "" ? $"Output\\{action.group}" : @"Output\\Un-Categorized";
+        if (!Directory.Exists(outputFolder)) Directory.CreateDirectory(outputFolder);
 
-        if (!Directory.Exists($"Output\\{action.group}\\vbs"))
-          Directory.CreateDirectory($"Output\\{action.group}\\vbs");
-        if (!Directory.Exists($"Output\\{action.group}\\bat"))
-          Directory.CreateDirectory($"Output\\{action.group}\\bat");
+
+        if (!Directory.Exists($"{outputFolder}\\vbs"))
+          Directory.CreateDirectory($"{outputFolder}\\vbs");
+        if (!Directory.Exists($"{outputFolder}\\bat"))
+          Directory.CreateDirectory($"{outputFolder}\\bat");
 
         string fileName = textInfo.ToTitleCase(action.name.ToLower()).Replace(" ", "");
         string command = $"..\\..\\..\\sbotac.exe {action.id}";
 
-        File.WriteAllText($"Output\\{action.group}\\vbs\\{fileName}.vbs", $"CreateObject(\"WScript.Shell\").Run \"{command}\", 0 ");
-        File.WriteAllText($"Output\\{action.group}\\bat\\{fileName}.bat", command);
+        File.WriteAllText($"{outputFolder}\\vbs\\{fileName}.vbs", $"CreateObject(\"WScript.Shell\").Run \"{command}\", 0 ");
+        File.WriteAllText($"{outputFolder}\\bat\\{fileName}.bat", command);
       }
     }
     catch (Exception ex)
@@ -160,6 +162,6 @@ class Program
     Console.WriteLine("-c -e / --create --enabled-only      Generate action only enabled true");
     Console.WriteLine("-c -e -g=\"group\" / --create --enabled-only --group=\"group\"      Generate action only selected group and enabled only");
     Console.WriteLine();
-    Console.WriteLine("-n=\"action name\" / -name=\"action name\"     Executing action in streamer.bot by name instead id");
+    Console.WriteLine("-n=\"action name\" / --name=\"action name\"     Executing action in streamer.bot by name instead id");
   }
 }
