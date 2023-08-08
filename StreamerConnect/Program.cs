@@ -40,6 +40,7 @@ class Program
 
     if (guidRegex.IsMatch(args[0]))
     {
+      findHost(address, port);
       await doActionAsync(address, port, args[0]);
       return;
     }
@@ -47,6 +48,7 @@ class Program
 
     if (args[0] == "--name" || args[0] == "-n")
     {
+      findHost(address, port);
       StringBuilder sb = new StringBuilder();
 
       for (int i = 1; i < args.Length; i++)
@@ -67,7 +69,7 @@ class Program
 
     if (args[0] == "-c" || args[0] == "--create")
     {
-
+      findHost(address, port);
       bool enabledOnly = false;
       string group = "";
 
@@ -163,5 +165,14 @@ class Program
     Console.WriteLine("-c -e -g=\"group\" / --create --enabled-only --group=\"group\"      Generate action only selected group and enabled only");
     Console.WriteLine();
     Console.WriteLine("-n=\"action name\" / --name=\"action name\"     Executing action in streamer.bot by name instead id");
+  }
+
+  private static void findHost(string host,string port)
+  {
+    if (host == null || port == null || host== ""|| port=="")
+    {
+      Console.WriteLine("Connection Invalid");
+      Environment.Exit(1);
+    }
   }
 }
