@@ -1,7 +1,7 @@
 # StreamerConnect
 The 1 day coding for create batch and use in streamer.bot using HIDmacros
 
-Requierd [***net. (code) 6.0***](https://dotnet.microsoft.com/en-us/download/dotnet) and above
+Requierd [***net. (core) 6.0***](https://dotnet.microsoft.com/en-us/download/dotnet) and above
 
 ### How to use:
 - Call this program for first time `sbotac.exe`
